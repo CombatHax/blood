@@ -44,7 +44,6 @@ setInterval(function() {
     }
     temp1[0] += 0.1 * temp1[1];
 }, 50);
-
 function intro() {
     for(let i = 0; i < 10; i++) {
         people[i] = new Person();
@@ -86,6 +85,7 @@ function intro() {
     window.requestAnimationFrame(intro);
 }
 function draw() {
+    temp = false;
     if(temp1[2]) {
         return;
     }
@@ -127,7 +127,6 @@ function draw() {
         let persPos = people[i].persPos;
         if(Math.abs(pos[0] - persPos[0]) < 32 && Math.abs(pos[1] + 32 - persPos[1]) < 32) {
             bldAmt[bldAmt.length] = people[i].bldType; 
-            console.log(bldAmt);
             people.splice(i, 1);
             people[people.length] = new Person();
         }
@@ -169,15 +168,34 @@ function submit() {
             }
             break;
         case 'O':
-            canRecieve = [6]
+            canRecieve = [6, 7]
             break;
     }
-    canRecieve[canRecieve.length] = 7;
+    canRecieve[canRecieve.length] = 6;
     canRecieve.sort(function(a, b){
         return a - b;
     });
     canRecieve = [... new Set(canRecieve)];
-    console.log(canRecieve);
+    let cor = true;
+    for(let i = 0; i < canRecieve.length; i++) {
+        if(canRecieve[i] != arr[i]) {
+            cor = false;
+        }
+    }
+    if(cor) win(Math.floor(Date.now() / 1000));
+    else lose(Math.floor(Date.now() / 1000));
+}
+function win(st) {
+    ctx.beginPath();
+    ctx.fillStyle = "#0000FF";
+    ctx.fillText("You WIN", 380, 350, 120);
+    window.requestAnimationFrame(win);
+}
+function lose(st) {
+    ctx.beginPath();
+    ctx.fillStyle = "#FF0000";
+    ctx.fillText("You LOSE", 380, 350, 120);
+    window.requestAnimationFrame(lose);
 }
 window.onkeydown = function(e) {
     switch(e.key) {
@@ -195,13 +213,10 @@ window.onkeydown = function(e) {
             break;
         case "ArrowLeft":
             bldAmt.pop();
-            console.log(bldAmt);
             break;
         case "ArrowDown":
             temp1[2] = true;
             submit();
-            
-
     }
 }
 window.onkeyup = function(e) {
