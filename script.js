@@ -1,28 +1,69 @@
 const cnv = document.getElementById("canvas");
 const ctx = cnv.getContext("2d");
-let pos = []
+let pos = [500, 300]
 const sprites = [];
-let bldAmt = 0;
+let bldAmt = [];
 let loaded = 0;
+let keys = [0, 0, 0, 0];
 let move = [];
 let temp = false;
+let temp1 = [1, 1];
+let recieve = 0;
+let people = [];
 
-for(let i = 0; i < 4; i++) {
-    let img = new Image(16, 16);
-    img.addEventListener('load', function() {
-        sprites[i] = img;
-        loaded++;
-        if(loaded >= 4) {
-            intro();
+temp1[0] = new Image();
+temp1[0].onload = imgLoad();
+temp1[0].src = `assets/person.png`;
+function imgLoad() {
+    sprites[sprites.length] = temp1[0];
+    if(!loaded) {
+        sprites.length = 0;
+    }
+    if(loaded >= 5) {
+        intro();
+        for(let i = 0; i < sprites.length; i++) {
         }
-    })
-    img.src = `assets/player${i}.png`;
+        return;
+    }
+    temp1[0] = new Image();
+    temp1[0].onload = imgLoad;
+    temp1[0].src = `assets/player${loaded - 1}.png`;
+    loaded++;
 }
 
 ctx.font = "42px Verdana";
 ctx.fillStyle = "#0000FF";
 
+setInterval(function() {
+    if(temp) {
+        return;
+    }
+    if(temp1[0] >= 1 || temp1[0] <= 0) {
+        temp1[1] -= temp1[1] * 2;
+    }
+    temp1[0] += 0.1 * temp1[1];
+}, 50);
+
 function intro() {
+    for(let i = 0; i < 10; i++) {
+        people[i] = new Person();
+    }
+    recieve = Math.floor(Math.random() * 100);
+        if(!recieve % 2) {
+            recieve -= recieve * 2;
+        }
+        if(Math.abs(recieve) <= 25) {
+            recieve = `A${recieve <= 0 ? '-' : '+'}`;
+        }
+        else if(Math.abs(recieve) <= 50) {
+            recieve = `B${recieve <= 0 ? '-' : '+'}`;
+        }
+        else if(Math.abs(recieve) <= 75) {
+            recieve = `AB${recieve <= 0 ? '-' : '+'}`;
+        }
+        else {
+            recieve = `O${recieve <= 0 ? '-' : '+'}`;
+        }
     ctx.beginPath();
     ctx.rect(0, 0, 1000, 600);
     ctx.strokeStyle = "#000000";
@@ -35,7 +76,7 @@ function intro() {
     ctx.fillText("The goal of this game is to test as much blood as you can!", 5, 50, 995);
     ctx.fillStyle = "#0000FF";
     ctx.fillText("You can move with W, A, S, and D", 250, 342, 500);
-    ctx.fillStyle = `rgba(255, 0, 0, ${Math.floor(Date.now()) / 1000 % 2})`;
+    ctx.fillStyle = `rgba(255, 0, 0, ${temp1[0]})`;
     ctx.fillText("Press any button to start the game", 250, 550, 500);
     if(temp) {
         draw();
@@ -45,50 +86,120 @@ function intro() {
 }
 
 function draw() {
+    for(let i = 0; i < 4; i++) {
+        if(keys[i]) {
+            switch(i) {
+                case 0:
+                    if(pos[1] >= 0) {
+                        pos[1] += -5;
+                    }
+                    break;
+                case 1:
+                    if(pos[1] <= 568) {
+                        pos[1] += 5;
+                    }
+                    break;
+                case 2:
+                    if(pos[0] >= 0) {
+                        pos[0] += -5;
+                    }
+                    break;
+                case 3:
+                    if(pos[0] <= 968) {
+                        pos[0] += 5;
+                    }
+                    break;
+            }
+        }
+    }
     ctx.beginPath();
     ctx.rect(0, 0, 1000, 600);
     ctx.strokeStyle = "#000000";
     ctx.fillStyle = "#FFFFFF";
     ctx.fill();
     ctx.stroke();
-    pos[0] += move[0] - move[0] * 2;
-    pos[1] += move[1] - move[1] * 2;
-    ctx.drawImage(sprites[bldAmt], pos[0], pos[1]);
+    ctx.drawImage(sprites[bldAmt.length + 1], pos[0], pos[1], 32, 32);
+    for(let i = 0; i < people.length; i++) {
+        people[i].draw();
+        let persPos = people[i].persPos;
+        if(Math.abs(pos[0] - persPos[0]) < 32 && Math.abs(pos[1] + 32 - persPos[1]) < 32) {
+            bldAmt[bldAmt.length] = people[i].bldType; 
+            console.log(bldAmt);
+            people.splice(i, 1);
+            people[people.length] = new Person();
+        }
+    }
     window.requestAnimationFrame(draw);
 }
 
+// Top Left
 window.onkeydown = function(e) {
     switch(e.key) {
         case "w":
-            moves[1]--;
+            keys[0] = 1;
             break;
         case "s":
-            move[1]++;
+            keys[1] = 1;
             break;
         case "a":
-            move[0]--;
+            keys[2] = 1;
             break;
         case "d":
-            move[0]++;
+            keys[3] = 1;
             break;
+        case "ArrowLeft":
+            bldAmt.pop();
+            console.log(bldAmt);
     }
 }
 window.onkeyup = function(e) {
     switch(e.key) {
         case "w":
-            moves[1] = 0;
+            keys[0] = 0;
             break;
         case "s":
-            move[1] = 0;
+            keys[1] = 0;
             break;
         case "a":
-            move[0] = 0;
+            keys[2] = 0;
             break;
         case "d":
-            move[0] = 0;
+            keys[3] = 0;
             break;
     }
     if(!temp) {
         temp = true;
+    }
+}
+
+class Person {
+    persPos = [];
+    bldType = 0;
+    dir = [];
+    constructor() {
+        this.bldType = Math.floor(Math.random() * 100);
+        if(!this.bldType % 2) {
+            this.bldType -= this.bldType * 2;
+        }
+        if(Math.abs(this.bldType) <= 25) {
+            this.bldType = `A${this.bldType <= 0 ? '-' : '+'}`;
+        }
+        else if(Math.abs(this.bldType) <= 50) {
+            this.bldType = `B${this.bldType <= 0 ? '-' : '+'}`;
+        }
+        else if(Math.abs(this.bldType) <= 75) {
+            this.bldType = `AB${this.bldType <= 0 ? '-' : '+'}`;
+        }
+        else {
+            this.bldType = `O${this.bldType <= 0 ? '-' : '+'}`;
+        }
+        this.changePos();
+    }
+    draw() {
+        ctx.drawImage(sprites[0], this.persPos[0], this.persPos[1], 32, 32);
+    }
+    changePos() {
+        let r = Math.random() * (600 - 32);
+        this.persPos = [Math.floor(Math.random() * (1000 - 32)), Math.floor(r)];
     }
 }
