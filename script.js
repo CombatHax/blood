@@ -2,7 +2,9 @@ const cnv = document.getElementById("canvas");
 const ctx = cnv.getContext("2d");
 let pos = [500, 300]
 const sprites = [];
-let bldAmt = [];
+let bldAmt = []; 
+const bldTypes = ['A-', 'A+', 'B-', 'B+', 'AB-', 'AB+', 'O-', 'O+'];
+let canRecieve = [];
 let loaded = 0;
 let keys = [0, 0, 0, 0];
 let move = [];
@@ -30,7 +32,6 @@ function imgLoad() {
     temp1[0].src = `assets/player${loaded - 1}.png`;
     loaded++;
 }
-
 ctx.font = "42px Verdana";
 ctx.fillStyle = "#0000FF";
 
@@ -84,8 +85,10 @@ function intro() {
     }
     window.requestAnimationFrame(intro);
 }
-
 function draw() {
+    if(temp1[2]) {
+        return;
+    }
     for(let i = 0; i < 4; i++) {
         if(keys[i]) {
             switch(i) {
@@ -118,7 +121,7 @@ function draw() {
     ctx.fillStyle = "#FFFFFF";
     ctx.fill();
     ctx.stroke();
-    ctx.drawImage(sprites[bldAmt.length + 1], pos[0], pos[1], 32, 32);
+    ctx.drawImage(sprites[bldAmt.length + 1 >= 3 ? 3 : bldAmt.length + 1], pos[0], pos[1], 32, 32);
     for(let i = 0; i < people.length; i++) {
         people[i].draw();
         let persPos = people[i].persPos;
@@ -129,10 +132,53 @@ function draw() {
             people[people.length] = new Person();
         }
     }
+    ctx.beginPath();
+    ctx.fillStyle = '#0000FF';
+    ctx.fillText(`Reciever has: ${recieve}`, 5, 50, 995);
+    ctx.fillText(`You have: ${bldAmt.length > 0 ? bldAmt : "No"} donors`, 5, 100, 995);
     window.requestAnimationFrame(draw);
 }
-
-// Top Left
+function submit() {
+    let arr = []
+    temp1[3] = [];
+    temp1[4] = [];
+    for(let i = 0; i < bldAmt.length; i++) {
+        arr[arr.length] = bldTypes.indexOf(bldAmt[i]);
+    }
+    arr.sort(function(a, b){
+        return a - b
+    });
+    arr = [... new Set(arr)];
+    switch(recieve.slice(0, -1)) {
+        case 'A':
+            canRecieve = [0]
+            if(recieve.slice(-1) === '+'){ 
+                canRecieve.push(1, 7);
+            }
+            break;
+        case 'B':
+            canRecieve = [2]
+            if(recieve.slice(-1) === '+'){ 
+                canRecieve.push(3, 7)
+            }
+            break;
+        case 'AB':
+            canRecieve = [0, 2, 4]
+            if(recieve.slice(-1) === '+'){ 
+                canRecieve.push(1, 3, 5, 7)
+            }
+            break;
+        case 'O':
+            canRecieve = [6]
+            break;
+    }
+    canRecieve[canRecieve.length] = 7;
+    canRecieve.sort(function(a, b){
+        return a - b;
+    });
+    canRecieve = [... new Set(canRecieve)];
+    console.log(canRecieve);
+}
 window.onkeydown = function(e) {
     switch(e.key) {
         case "w":
@@ -150,6 +196,12 @@ window.onkeydown = function(e) {
         case "ArrowLeft":
             bldAmt.pop();
             console.log(bldAmt);
+            break;
+        case "ArrowDown":
+            temp1[2] = true;
+            submit();
+            
+
     }
 }
 window.onkeyup = function(e) {
@@ -171,16 +223,13 @@ window.onkeyup = function(e) {
         temp = true;
     }
 }
-
 class Person {
     persPos = [];
     bldType = 0;
     dir = [];
     constructor() {
         this.bldType = Math.floor(Math.random() * 100);
-        if(!this.bldType % 2) {
-            this.bldType -= this.bldType * 2;
-        }
+        this.bldType = (this.bldType - 50) * 2;
         if(Math.abs(this.bldType) <= 25) {
             this.bldType = `A${this.bldType <= 0 ? '-' : '+'}`;
         }
