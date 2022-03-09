@@ -121,7 +121,7 @@ function draw() {
     ctx.fillStyle = "#FFFFFF";
     ctx.fill();
     ctx.stroke();
-    ctx.drawImage(sprites[bldAmt.length + 1 >= 3 ? 3 : bldAmt.length + 1], pos[0], pos[1], 32, 32);
+    ctx.drawImage(sprites[1], pos[0], pos[1], 32, 32);
     for(let i = 0; i < people.length; i++) {
         people[i].draw();
         let persPos = people[i].persPos;
